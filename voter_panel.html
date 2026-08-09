@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Voting Panel - Face Recognition Voting System{% endblock %}
+
+{% block content %}
+<!-- Voter Panel Content -->
+<div class="container mx-auto p-4">
+    <div class="bg-white shadow-lg rounded-lg p-6 mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 mb-6">Voting Panel</h1>
+
+        <!-- Voter Information Card -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8 flex items-center justify-between shadow-md">
+            <div>
+                <h2 class="text-2xl font-semibold text-blue-800 mb-2">Welcome, {{ voter.name }}!</h2>
+                <div class="text-gray-700 text-lg">
+                    <div class="flex items-center mb-1"><i class="fas fa-id-card mr-2"></i><strong>Voter ID:</strong> {{ voter.voter_id }}</div>
+                    <div class="flex items-center mb-1"><i class="fas fa-venus-mars mr-2"></i><strong>Gender:</strong> {{ voter.gender }}</div>
+                    <div class="flex items-center mb-1"><i class="fas fa-phone mr-2"></i><strong>Phone:</strong> {{ voter.phone }}</div>
+                    <div class="flex items-center"><i class="fas fa-calendar mr-2"></i><strong>Age:</strong> {{ (date.today() - voter.birthdate).days // 365 }} years</div>
+                </div>
+            </div>
+            <div class="text-center">
+                {% if voter.has_voted %}
+                    <span class="inline-block bg-green-100 text-green-800 text-xl font-semibold px-4 py-2 rounded-full"><i class="fas fa-check-circle mr-2"></i>You have Voted!</span>
+                {% else %}
+                    <span class="inline-block bg-blue-100 text-blue-800 text-xl font-semibold px-4 py-2 rounded-full"><i class="fas fa-vote-yea mr-2"></i>Ready to Vote</span>
+                    <p class="text-blue-600 mt-1">Verify your face to proceed</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Election Status Card -->
+        <div class="bg-gradient-to-r {% if is_election_active %}from-green-100 to-green-200{% elif election %}from-yellow-100 to-yellow-200{% else %}from-gray-100 to-gray-200{% endif %} border {% if is_election_active %}border-green-300{% elif election %}border-yellow-300{% else %}border-gray-300{% endif %} rounded-lg p-6 mb-8 text-center shadow-md">
+            <h2 class="text-3xl font-bold {% if is_election_active %}text-green-800{% elif election %}text-yellow-800{% else %}text-gray-800{% endif %} mb-4">{{ election_status_message }}</h2>
+
+            {% if election %}
+                {% if not is_election_active and time_until_election_start %}
+                    <p class="text-xl {% if election %}text-yellow-700{% else %}text-gray-700{% endif %} mb-2">Election Starts In:</p>
+                    <div id="countdown" class="text-5xl font-extrabold {% if election %}text-yellow-900{% else %}text-gray-900{% endif %} mb-4"></div>
+                    <p class="text-lg text-yellow-600">Ends: {{ election_end_time_for_display.strftime('%Y-%m-%d %H:%M') }} IST</p>
+                {% elif is_election_active %}
+                    <p class="text-lg text-green-700">Ends: {{ election_end_time_for_display.strftime('%Y-%m-%d %H:%M') }} IST</p>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <!-- Face Verification Section -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6 mb-8 shadow-md">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center"><i class="fas fa-user-check mr-2"></i>Face Verification Required</h2>
+            <p class="text-gray-600 mb-4">To cast your vote, please verify your face using the camera. Ensure good lighting.</p>
+
+            <div class="flex flex-col items-center mb-6">
+                <video id="webcam" width="640" height="480" autoplay class="rounded-lg shadow-inner mb-4"></video>
+                <canvas id="canvas" width="640" height="480" class="hidden"></canvas>
+                <img id="verification-image-preview" class="rounded-lg border-2 border-blue-500 mb-4" width="640" height="480" style="display: none;">
+                <button id="startCapture" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-xl transition duration-300 ease-in-out transform hover:scale-105 {% if not is_election_active %}opacity-50 cursor-not-allowed{% endif %}" {% if not is_election_active %}disabled{% endif %}>
+                    <i class="fas fa-camera mr-2"></i>Start Face Verification
+                </button>
+            </div>
+
+            <div id="verificationStatus" class="text-center text-lg font-medium"></div>
+
+            <!-- Candidate List and Voting Form -->
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4 mt-8 flex items-center"><i class="fas fa-person-booth mr-2"></i>Candidates</h2>
+            {% if candidates %}
+                <form method="POST" action="{{ url_for('main.cast_vote') }}">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {% for candidate in candidates %}
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 flex flex-col items-center text-center shadow-sm">
+                                <img src="{{ candidate.photo_url }}" alt="{{ candidate.name }}" class="w-24 h-24 rounded-full object-cover mb-3 border-2 border-blue-400"/>
+                                <h3 class="text-xl font-semibold text-gray-800 mb-1">{{ candidate.name }}</h3>
+                                <p class="text-gray-600 text-sm">{{ candidate.party }}</p>
+                                <input type="radio" name="candidate_id" value="{{ candidate.id }}" class="mt-3 form-radio h-5 w-5 text-blue-600" required>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="text-center mt-8">
+                        <button type="submit" id="castVoteButton" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-xl transition duration-300 ease-in-out transform hover:scale-105 {% if not is_election_active %}opacity-50 cursor-not-allowed{% endif %}" {% if not is_election_active %}disabled{% endif %}>
+                            <i class="fas fa-check-circle mr-2"></i>Cast My Vote
+                        </button>
+                    </div>
+                </form>
+            {% else %}
+                <p class="text-gray-600">No candidates registered yet for this election.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    const webcam = document.getElementById('webcam');
+    const canvas = document.getElementById('canvas');
+    const context = canvas.getContext('2d');
+    const startCaptureButton = document.getElementById('startCapture');
+    const verificationStatus = document.getElementById('verificationStatus');
+    const castVoteButton = document.getElementById('castVoteButton');
+    const electionActive = {{ 'true' if is_election_active else 'false' }};
+    const verificationImagePreview = document.getElementById('verification-image-preview');
+
+    let stream;
+
+    // Disable face verification and voting if election is not active
+    if (!electionActive) {
+        startCaptureButton.disabled = true;
+        castVoteButton.disabled = true;
+        verificationStatus.innerText = "Voting is not active. Please wait for the election to start or for an admin to schedule one.";
+        verificationStatus.classList.add('text-red-600');
+    }
+
+    startCaptureButton.addEventListener('click', async () => {
+        if (!electionActive) {
+            alert("Voting is not active yet.");
+            return;
+        }
+
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            webcam.srcObject = stream;
+            webcam.play();
+            webcam.style.display = 'block'; // Show webcam feed
+            verificationImagePreview.style.display = 'none'; // Hide preview image
+            verificationStatus.innerText = 'Capturing face...';
+            verificationStatus.className = 'text-center text-lg font-medium text-blue-600';
+            startCaptureButton.innerText = 'Verify Face';
+            startCaptureButton.removeEventListener('click', verifyFaceHandler); // Remove previous listener if any
+            startCaptureButton.addEventListener('click', verifyFaceHandler); // Add new listener
+
+        } catch (err) {
+            console.error("Error accessing webcam: ", err);
+            verificationStatus.innerText = 'Error accessing webcam. Please ensure your camera is connected and allowed.';
+            verificationStatus.classList.add('text-red-600');
+        }
+    });
+
+    const verifyFaceHandler = async () => {
+        if (!electionActive) {
+            alert("Voting is not active yet.");
+            return;
+        }
+        context.drawImage(webcam, 0, 0, canvas.width, canvas.height);
+        const imageData = canvas.toDataURL('image/jpeg');
+
+        verificationStatus.innerText = 'Verifying face...';
+        verificationStatus.className = 'text-center text-lg font-medium text-yellow-600';
+        
+        try {
+            const response = await fetch('/verify_face', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ face_data: imageData })
+            });
+            const data = await response.json();
+
+            // Display the image with bounding box if returned
+            if (data.image_with_bbox) {
+                verificationImagePreview.src = data.image_with_bbox;
+                verificationImagePreview.style.display = 'block';
+                webcam.style.display = 'none'; // Hide webcam feed
+            }
+
+            if (data.success) {
+                verificationStatus.innerText = 'Face verification successful! You can now cast your vote.';
+                verificationStatus.className = 'text-center text-lg font-medium text-green-600';
+                castVoteButton.disabled = false;
+                startCaptureButton.innerText = 'Verified';
+                startCaptureButton.disabled = true; // Disable after successful verification
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    webcam.srcObject = null;
+                }
+            } else {
+                verificationStatus.innerText = `Verification failed: ${data.message}`; 
+                verificationStatus.className = 'text-center text-lg font-medium text-red-600';
+                castVoteButton.disabled = true;
+            }
+        } catch (error) {
+            console.error('Error during face verification:', error);
+            verificationStatus.innerText = 'An error occurred during verification.';
+            verificationStatus.className = 'text-center text-lg font-medium text-red-600';
+            castVoteButton.disabled = true;
+        }
+    };
+
+    // Countdown Timer Logic
+    const countdownElement = document.getElementById('countdown');
+    const electionStartTimeTimestamp = {{ election_start_time_timestamp | tojson }};
+
+    if (countdownElement && electionStartTimeTimestamp) {
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = electionStartTimeTimestamp - now;
+
+            if (distance < 0) {
+                countdownElement.innerText = "Voting is now active!";
+                // Reload the page to reflect active status and enable voting
+                setTimeout(() => location.reload(), 1000); 
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            countdownElement.innerHTML = 
+                `<span class="text-blue-600">${days}d</span> ` +
+                `<span class="text-blue-600">${hours}h</span> ` +
+                `<span class="text-blue-600">${minutes}m</span> ` +
+                `<span class="text-blue-600">${seconds}s</span> `;
+        }
+
+        updateCountdown(); // Initial call
+        setInterval(updateCountdown, 1000);
+    }
+</script>
+{% endblock %}

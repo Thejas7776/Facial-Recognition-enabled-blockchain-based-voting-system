@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Verify OTP{% endblock %}
+
+{% block content %}
+<section class="py-8">
+    <div class="max-w-md mx-auto px-4">
+        <div class="bg-white rounded-xl shadow-lg p-8 animate-fade-in">
+            <div class="text-center mb-8">
+                <i class="fas fa-shield-alt text-5xl text-blue-600 mb-4"></i>
+                <h1 class="text-3xl font-bold text-gray-900">Verify One-Time Password</h1>
+                <p class="text-gray-600 mt-2">Please check your email (<span id="voter-email-display"></span>) for the OTP.</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('main.verify_otp') }}">
+                <div class="mb-6">
+                    <label for="otp_code" class="block text-sm font-medium text-gray-700 mb-2">OTP Code</label>
+                    <input type="text" 
+                           id="otp_code" 
+                           name="otp_code" 
+                           required
+                           minlength="6"
+                           maxlength="6"
+                           placeholder="Enter 6-digit OTP"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg text-center text-xl tracking-widest focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                <div class="flex justify-center">
+                    <button type="submit" 
+                            class="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-check-circle mr-2"></i>Verify OTP
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- EmailJS SDK -->
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script type="text/javascript">
+    window.onload = function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const voterId = urlParams.get('voter_id');
+        const otpCode = urlParams.get('otp_code');
+        const voterEmail = urlParams.get('email');
+        const serviceId = urlParams.get('service_id');
+        const templateId = urlParams.get('template_id');
+        const publicKey = urlParams.get('public_key');
+
+        document.getElementById('voter-email-display').innerText = voterEmail;
+
+        if (serviceId && templateId && publicKey && otpCode && voterEmail) {
+            emailjs.init(publicKey);
+
+            const templateParams = {
+                otp_code: otpCode,
+                to_email: voterEmail,
+                voter_id: voterId
+            };
+
+            emailjs.send(serviceId, templateId, templateParams)
+                .then(function(response) {
+                    console.log('SUCCESS!', response.status, response.text);
+                }, function(error) {
+                    console.log('FAILED...', error);
+                    // Optionally, show an error message to the user
+                    // For now, relying on Flask flash messages for OTP verification failure
+                });
+        } else {
+            console.error("Missing EmailJS parameters or OTP data in URL.");
+            // Handle case where parameters are missing, e.g., redirect to login
+            // window.location.href = "{{ url_for('main.login') }}";
+        }
+    };
+</script>
+{% endblock %}

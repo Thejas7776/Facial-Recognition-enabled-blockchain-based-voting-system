@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Candidates - Admin Dashboard{% endblock %}
+
+{% block content %}
+<section class="py-8">
+    <div class="max-w-6xl mx-auto px-4">
+        <h1 class="text-3xl font-bold text-gray-900 mb-6">Manage Candidates</h1>
+        
+        <div class="bg-white rounded-xl shadow-lg p-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">All Registered Candidates</h2>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white">
+                    <thead>
+                        <tr>
+                            <th class="py-3 px-4 border-b-2 border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Name</th>
+                            <th class="py-3 px-4 border-b-2 border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Symbol</th>
+                            <th class="py-3 px-4 border-b-2 border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">State</th>
+                            <th class="py-3 px-4 border-b-2 border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">District</th>
+                            <th class="py-3 px-4 border-b-2 border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Taluk</th>
+                            <th class="py-3 px-4 border-b-2 border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Votes</th>
+                            <th class="py-3 px-4 border-b-2 border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Image</th>
+                            <th class="py-3 px-4 border-b-2 border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for candidate in candidates %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-3 px-4 border-b border-gray-200 text-sm">{{ candidate.name }}</td>
+                            <td class="py-3 px-4 border-b border-gray-200 text-sm">{{ candidate.symbol }}</td>
+                            <td class="py-3 px-4 border-b border-gray-200 text-sm">{{ candidate.state }}</td>
+                            <td class="py-3 px-4 border-b border-gray-200 text-sm">{{ candidate.district }}</td>
+                            <td class="py-3 px-4 border-b border-gray-200 text-sm">{{ candidate.taluk }}</td>
+                            <td class="py-3 px-4 border-b border-gray-200 text-sm">{{ candidate.votes }}</td>
+                            <td class="py-3 px-4 border-b border-gray-200 text-sm">
+                                {% if candidate.photo_url %}
+                                    <img src="{{ url_for('static', filename=candidate.photo_url.split('/static/')[1]) }}" alt="Symbol" class="h-8 w-8 object-cover rounded-full">
+                                {% else %}
+                                    <i class="fas fa-image text-gray-400"></i>
+                                {% endif %}
+                            </td>
+                            <td class="py-3 px-4 border-b border-gray-200 text-sm">
+                                <a href="#" class="text-blue-600 hover:text-blue-800 mr-3">Edit</a>
+                                <a href="#" class="text-red-600 hover:text-red-800">Delete</a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="py-3 px-4 text-center text-gray-500">No candidates registered yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

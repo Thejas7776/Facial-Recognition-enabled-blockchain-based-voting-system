@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Register Voter - Admin Dashboard{% endblock %}
+
+{% block content %}
+<section class="py-8">
+    <div class="max-w-4xl mx-auto px-4">
+        <div class="bg-white rounded-xl shadow-lg p-8 animate-fade-in">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <i class="fas fa-user-plus text-5xl text-blue-600 mb-4"></i>
+                <h1 class="text-3xl font-bold text-gray-900">Register New Voter</h1>
+                <p class="text-gray-600 mt-2">Add a new voter to the system with biometric verification</p>
+            </div>
+
+            <form method="POST" id="registration-form">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Personal Information -->
+                    <div class="space-y-6">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-4">
+                            <i class="fas fa-user mr-2"></i>Personal Information
+                        </h3>
+
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                            <input type="text" 
+                                   id="name" 
+                                   name="name" 
+                                   required
+                                   placeholder="Enter full name"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <div>
+                            <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                            <input type="tel" 
+                                   id="phone" 
+                                   name="phone" 
+                                   required
+                                   placeholder="+1234567890"
+                                   pattern="[+]?[0-9]{10,15}"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <input type="email" 
+                                   id="email" 
+                                   name="email" 
+                                   required
+                                   placeholder="Enter voter's email"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <div>
+                            <label for="address" class="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                            <textarea id="address" 
+                                      name="address" 
+                                      required
+                                      rows="3"
+                                      placeholder="Enter complete address"
+                                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"></textarea>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="gender" class="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+                                <select id="gender" 
+                                        name="gender" 
+                                        required
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="birthdate" class="block text-sm font-medium text-gray-700 mb-2">Birth Date</label>
+                                <input type="date" 
+                                       id="birthdate" 
+                                       name="birthdate" 
+                                       required
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Face Capture -->
+                    <div class="space-y-6">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-4">
+                            <i class="fas fa-camera mr-2"></i>Biometric Verification (4 Photos)
+                        </h3>
+
+                        <div class="bg-gray-50 rounded-lg p-6 text-center">
+                            <div id="camera-section" class="mb-4">
+                                <p class="text-sm text-gray-600 mb-4">Position the voter's face and capture photos from different angles.</p>
+                                <button type="button" 
+                                        id="start-camera" 
+                                        class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                                    <i class="fas fa-video mr-2"></i>Start Camera
+                                </button>
+                                <button type="button" 
+                                        id="stop-camera" 
+                                        class="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors hidden">
+                                    <i class="fas fa-stop mr-2"></i>Stop Camera
+                                </button>
+                            </div>
+
+                            <div id="video-feed-container" class="relative mb-4 hidden">
+                                <video id="video" width="320" height="240" autoplay muted class="rounded-lg border-2 border-gray-300 mx-auto"></video>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 mt-4">
+                                {% for i in range(4) %}
+                                <div class="bg-white border border-gray-200 rounded-lg p-3 text-center">
+                                    <p class="font-medium text-gray-700 mb-2">Photo {{ i+1 }} ({{ [][i] }})</p>
+                                    <img id="captured-img-{{ i+1 }}" class="rounded-lg border-2 border-gray-300 mx-auto mb-2 w-32 h-24 object-contain hidden">
+                                    <button type="button" 
+                                            id="capture-btn-{{ i+1 }}" 
+                                            class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                                        <i class="fas fa-camera mr-2"></i>Capture
+                                    </button>
+                                    <input type="hidden" name="face_data_{{ i+1 }}" id="face_data_{{ i+1 }}">
+                                    <p id="status-{{ i+1 }}" class="text-xs text-green-600 mt-1 hidden"><i class="fas fa-check-circle mr-1"></i>Captured!</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Section -->
+                <div class="mt-8 pt-6 border-t border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <a href="{{ url_for('main.admin_dashboard') }}" 
+                           class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-colors">
+                            <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                        </a>
+                        
+                        <button type="submit" 
+                                id="submit-btn"
+                                disabled
+                                class="bg-gray-400 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
+                            <i class="fas fa-user-plus mr-2"></i>Register Voter
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<script>
+    const video = document.getElementById('video');
+    const startCameraButton = document.getElementById('start-camera');
+    const stopCameraButton = document.getElementById('stop-camera');
+    const videoFeedContainer = document.getElementById('video-feed-container');
+    const submitButton = document.getElementById('submit-btn');
+
+    const captureButtons = [];
+    const capturedImages = [];
+    const hiddenFaceDataInputs = [];
+    const statusMessages = [];
+    const requiredPhotos = 4;
+    let photosCapturedCount = 0;
+    let stream = null;
+
+    for (let i = 1; i <= requiredPhotos; i++) {
+        captureButtons.push(document.getElementById(`capture-btn-${i}`));
+        capturedImages.push(document.getElementById(`captured-img-${i}`));
+        hiddenFaceDataInputs.push(document.getElementById(`face_data_${i}`));
+        statusMessages.push(document.getElementById(`status-${i}`));
+    }
+
+    function enableCaptureButtons() {
+        captureButtons.forEach(button => button.disabled = false);
+    }
+
+    function disableCaptureButtons() {
+        captureButtons.forEach(button => button.disabled = true);
+    }
+
+    function checkAllPhotosCaptured() {
+        return photosCapturedCount === requiredPhotos;
+    }
+
+    startCameraButton.addEventListener('click', async () => {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+            videoFeedContainer.classList.remove('hidden');
+            startCameraButton.classList.add('hidden');
+            stopCameraButton.classList.remove('hidden');
+            video.play();
+            enableCaptureButtons();
+
+        } catch (err) {
+            console.error("Error accessing webcam: ", err);
+            alert('Error accessing webcam. Please ensure your camera is connected and allowed.');
+        }
+    });
+
+    stopCameraButton.addEventListener('click', () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+        videoFeedContainer.classList.add('hidden');
+        startCameraButton.classList.remove('hidden');
+        stopCameraButton.classList.add('hidden');
+        disableCaptureButtons();
+    });
+
+    captureButtons.forEach((button, index) => {
+        button.addEventListener('click', async () => {
+            const photoIndex = index;
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageDataUrl = canvas.toDataURL('image/jpeg');
+            
+            // Directly display the captured image without sending to backend for bounding box
+            capturedImages[photoIndex].src = imageDataUrl;
+            capturedImages[photoIndex].classList.remove('hidden');
+            hiddenFaceDataInputs[photoIndex].value = imageDataUrl; // Store original image data
+            statusMessages[photoIndex].classList.remove('hidden');
+            button.disabled = true;
+            photosCapturedCount++;
+            if (checkAllPhotosCaptured()) {
+                submitButton.disabled = false;
+                stopCameraButton.click(); // Stop camera once all photos are captured
+            }
+        });
+    });
+</script>
+{% endblock %}

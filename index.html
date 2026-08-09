@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative bg-cover bg-center h-screen flex items-center justify-center" style="background-image: url('{{ url_for('static', filename='Voting-image.jpg') }}');">
+    <div class="absolute inset-0 bg-black opacity-60"></div>
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
+        <h1 class="text-5xl md:text-6xl font-extrabold mb-6 leading-tight animate-fade-in-down">
+            Your Vote, Secured.
+        </h1>
+        <p class="text-xl md:text-2xl mb-10 max-w-4xl mx-auto animate-fade-in-up">
+            Experience the future of secure, transparent, and biometric-enabled democratic voting with cutting-edge face recognition technology.
+        </p>
+        <a href="{{ url_for('main.login') }}" 
+           class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-full font-semibold text-lg shadow-lg transform hover:scale-105 transition-all duration-300 animate-fade-in-up-delay">
+            <i class="fas fa-sign-in-alt mr-3"></i>Get Started
+        </a>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">Why Choose Our System?</h2>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                Advanced biometric technology meets democratic transparency
+            </p>
+        </div>
+        
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <div class="text-blue-600 text-4xl mb-4">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Secure Authentication</h3>
+                <p class="text-gray-600">
+                    Face recognition technology ensures only authorized voters can participate, 
+                    eliminating fraud and duplicate voting.
+                </p>
+            </div>
+            
+            <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <div class="text-green-600 text-4xl mb-4">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Real-time Results</h3>
+                <p class="text-gray-600">
+                    Live vote counting and instant result visualization with interactive charts 
+                    for complete transparency.
+                </p>
+            </div>
+            
+            <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <div class="text-purple-600 text-4xl mb-4">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">User Friendly</h3>
+                <p class="text-gray-600">
+                    Intuitive interface designed for all age groups with responsive design 
+                    for desktop and mobile devices.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="bg-gray-50 py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">How It Works</h2>
+            <p class="text-xl text-gray-600">Simple steps to secure voting</p>
+        </div>
+        
+        <div class="grid md:grid-cols-4 gap-8">
+            <div class="text-center">
+                <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-2xl font-bold text-blue-600">1</span>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">Register</h3>
+                <p class="text-gray-600 text-sm">Admin registers voters with face capture</p>
+            </div>
+            
+            <div class="text-center">
+                <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-2xl font-bold text-green-600">2</span>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">Verify</h3>
+                <p class="text-gray-600 text-sm">Face recognition verifies voter identity</p>
+            </div>
+            
+            <div class="text-center">
+                <div class="bg-yellow-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-2xl font-bold text-yellow-600">3</span>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">Vote</h3>
+                <p class="text-gray-600 text-sm">Select candidate and cast secure vote</p>
+            </div>
+            
+            <div class="text-center">
+                <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-2xl font-bold text-purple-600">4</span>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">Results</h3>
+                <p class="text-gray-600 text-sm">View real-time results and analytics</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="bg-gradient-to-r from-indigo-600 to-purple-700 text-white py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="text-3xl font-bold mb-4">Ready to Vote?</h2>
+        <p class="text-xl mb-8">Join the future of democratic participation</p>
+        <a href="{{ url_for('main.login') }}" 
+           class="bg-white text-indigo-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 shadow-lg">
+            <i class="fas fa-vote-yea mr-2"></i>Start Voting Now
+        </a>
+    </div>
+</section>
+{% endblock %}

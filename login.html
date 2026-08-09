@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Face Recognition Voting System{% endblock %}
+
+{% block content %}
+<section class="py-16">
+    <div class="max-w-md mx-auto px-4">
+        <div class="bg-white rounded-xl shadow-lg p-8 animate-fade-in">
+            <!-- Logo -->
+            <div class="text-center mb-8">
+                <i class="fas fa-vote-yea text-5xl text-blue-600 mb-4"></i>
+                <h1 class="text-2xl font-bold text-gray-900">Login to Vote</h1>
+                <p class="text-gray-600 mt-2">Choose your role to continue</p>
+            </div>
+
+            <!-- Role Selection -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-3">Select Role</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <button type="button" 
+                            onclick="selectRole('voter')" 
+                            id="voter-btn"
+                            class="role-btn border-2 border-gray-300 p-4 rounded-lg text-center hover:border-blue-500 transition-colors">
+                        <i class="fas fa-user text-2xl text-gray-500 mb-2"></i>
+                        <div class="text-sm font-medium text-gray-700">Voter</div>
+                    </button>
+                    <button type="button" 
+                            onclick="selectRole('admin')" 
+                            id="admin-btn"
+                            class="role-btn border-2 border-gray-300 p-4 rounded-lg text-center hover:border-blue-500 transition-colors">
+                        <i class="fas fa-user-shield text-2xl text-gray-500 mb-2"></i>
+                        <div class="text-sm font-medium text-gray-700">Admin</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Login Forms -->
+            <form method="POST" id="login-form">
+                <input type="hidden" name="role" id="selected-role" required>
+
+                <!-- Voter Login -->
+                <div id="voter-form" class="login-form" style="display: none;">
+                    <div class="mb-6">
+                        <label for="voter_id" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-id-card mr-2"></i>Voter ID
+                        </label>
+                        <input type="text" 
+                               id="voter_id" 
+                               name="voter_id" 
+                               placeholder="Enter your Voter ID"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">Format: VTR followed by 7 digits</p>
+                    </div>
+                </div>
+
+                <!-- Admin Login -->
+                <div id="admin-form" class="login-form" style="display: none;">
+                    <div class="mb-4">
+                        <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-user mr-2"></i>Username
+                        </label>
+                        <input type="text" 
+                               id="username" 
+                               name="username" 
+                               placeholder="Enter admin username"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-lock mr-2"></i>Password
+                        </label>
+                        <div class="relative">
+                            <input type="password" 
+                                   id="password" 
+                                   name="password" 
+                                   placeholder="Enter admin password"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12">
+                            <button type="button" 
+                                    onclick="togglePassword()"
+                                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                                <i class="fas fa-eye" id="password-icon"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="text-xs text-gray-500 mb-4 bg-blue-50 p-3 rounded-lg">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Default credentials: <strong>admin</strong> / <strong>admin123</strong>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" 
+                        id="submit-btn"
+                        disabled
+                        class="w-full bg-gray-400 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    <span id="submit-text">Select Role First</span>
+                </button>
+            </form>
+
+            <!-- Additional Links -->
+            <div class="mt-6 text-center text-sm text-gray-600">
+                <a href="{{ url_for('main.about') }}" class="text-blue-600 hover:text-blue-800">Learn about our system</a>
+                <span class="mx-2">•</span>
+                <a href="{{ url_for('main.results') }}" class="text-blue-600 hover:text-blue-800">View results</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    let selectedRole = null;
+
+    function selectRole(role) {
+        selectedRole = role;
+        
+        // Update button styles
+        document.querySelectorAll('.role-btn').forEach(btn => {
+            btn.classList.remove('border-blue-500', 'bg-blue-50');
+            btn.classList.add('border-gray-300');
+        });
+        
+        const selectedBtn = document.getElementById(role + '-btn');
+        selectedBtn.classList.remove('border-gray-300');
+        selectedBtn.classList.add('border-blue-500', 'bg-blue-50');
+        
+        // Hide all forms
+        document.querySelectorAll('.login-form').forEach(form => {
+            form.style.display = 'none';
+        });
+        
+        // Show selected form
+        document.getElementById(role + '-form').style.display = 'block';
+        
+        // Update hidden input
+        document.getElementById('selected-role').value = role;
+        
+        // Enable submit button
+        const submitBtn = document.getElementById('submit-btn');
+        const submitText = document.getElementById('submit-text');
+        
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('bg-gray-400');
+        submitBtn.classList.add('bg-blue-600');
+        
+        if (role === 'voter') {
+            submitText.textContent = 'Login as Voter';
+        } else {
+            submitText.textContent = 'Login as Admin';
+        }
+    }
+
+    function togglePassword() {
+        const passwordInput = document.getElementById('password');
+        const passwordIcon = document.getElementById('password-icon');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            passwordIcon.classList.remove('fa-eye');
+            passwordIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            passwordIcon.classList.remove('fa-eye-slash');
+            passwordIcon.classList.add('fa-eye');
+        }
+    }
+
+    // Check URL parameters for pre-selected role
+    const urlParams = new URLSearchParams(window.location.search);
+    const roleParam = urlParams.get('role');
+    if (roleParam && (roleParam === 'voter' || roleParam === 'admin')) {
+        selectRole(roleParam);
+    }
+</script>
+{% endblock %}

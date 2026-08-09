@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Face Recognition Voting System{% endblock %}
+
+{% block content %}
+<section class="py-8">
+    <div class="max-w-7xl mx-auto px-4">
+        <!-- Dashboard Header -->
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-xl p-8 mb-8 animate-fade-in">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold mb-2">Admin Dashboard</h1>
+                    <p class="text-blue-100">Manage voters, candidates, and monitor voting results</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-2xl font-bold">{{ total_votes }}</div>
+                    <div class="text-blue-100">Total Votes Cast</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="grid md:grid-cols-4 gap-6 mb-8">
+            <a href="{{ url_for('main.admin_voters') }}" class="block h-full">
+                <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
+                    <div class="flex items-center">
+                        <div class="bg-blue-100 p-3 rounded-full">
+                            <i class="fas fa-users text-2xl text-blue-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <div class="text-2xl font-bold text-gray-900">{{ voters|length }}</div>
+                            <div class="text-gray-600">Total Voters</div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+            
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center">
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <i class="fas fa-user-check text-2xl text-green-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <div class="text-2xl font-bold text-gray-900">{{ voters|selectattr('has_voted')|list|length }}</div>
+                        <div class="text-gray-600">Voted</div>
+                    </div>
+                </div>
+            </div>
+            
+            <a href="{{ url_for('main.admin_candidates') }}" class="block h-full">
+                <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
+                    <div class="flex items-center">
+                        <div class="bg-purple-100 p-3 rounded-full">
+                            <i class="fas fa-user-friends text-2xl text-purple-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <div class="text-2xl font-bold text-gray-900">{{ candidates|length }}</div>
+                            <div class="text-gray-600">Candidates</div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+            
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center">
+                    <div class="bg-yellow-100 p-3 rounded-full">
+                        <i class="fas fa-chart-line text-2xl text-yellow-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <div class="text-2xl font-bold text-gray-900">
+                            {% if voters|length > 0 %}
+                                {{ "%.1f"|format((voters|selectattr('has_voted')|list|length / voters|length * 100)) }}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </div>
+                        <div class="text-gray-600">Turnout</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="grid md:grid-cols-3 gap-6 mb-8">
+            <a href="{{ url_for('main.admin_register') }}" 
+               class="bg-blue-600 text-white p-6 rounded-xl hover:bg-blue-700 transition-colors text-center">
+                <i class="fas fa-user-plus text-3xl mb-3"></i>
+                <h3 class="text-xl font-bold">Register New Voter</h3>
+                <p class="text-blue-100">Add voter with face capture</p>
+            </a>
+            
+            <button onclick="showAddCandidateModal()" 
+                    class="bg-green-600 text-white p-6 rounded-xl hover:bg-green-700 transition-colors text-center">
+                <i class="fas fa-user-tie text-3xl mb-3"></i>
+                <h3 class="text-xl font-bold">Add Candidate</h3>
+                <p class="text-green-100">Add new election candidate</p>
+            </button>
+            
+            <button onclick="showAddElectionModal()" 
+                    class="bg-yellow-600 text-white p-6 rounded-xl hover:bg-yellow-700 transition-colors text-center">
+                <i class="fas fa-calendar-plus text-3xl mb-3"></i>
+                <h3 class="text-xl font-bold">Create New Election</h3>
+                <p class="text-yellow-100">Set voting schedule and details</p>
+            </button>
+            <a href="{{ url_for('main.results') }}" 
+               class="bg-purple-600 text-white p-6 rounded-xl hover:bg-purple-700 transition-colors text-center">
+                <i class="fas fa-chart-bar text-3xl mb-3"></i>
+                <h3 class="text-xl font-bold">View Results</h3>
+                <p class="text-purple-100">Live voting results</p>
+            </a>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-8">
+            <!-- Candidates Management -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">
+                        <i class="fas fa-user-tie mr-2"></i>Candidates
+                    </h2>
+                    <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+                        {{ candidates|length }} Total
+                    </span>
+                </div>
+                
+                {% if candidates %}
+                    <div class="space-y-4 max-h-96 overflow-y-auto">
+                        {% for candidate in candidates %}
+                            <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mr-4">
+                                            <i class="fas fa-user text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-semibold text-gray-900">{{ candidate.name }}</h3>
+                                            <p class="text-sm text-gray-600">{{ candidate.symbol }} • {{ candidate.district }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-lg font-bold text-green-600">{{ candidate.votes }}</div>
+                                        <div class="text-xs text-gray-500">votes</div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <i class="fas fa-user-tie text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-600">No candidates added yet</p>
+                        <button onclick="showAddCandidateModal()" 
+                                class="mt-4 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                            Add First Candidate
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Voters Management -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">
+                        <i class="fas fa-users mr-2"></i>Voters
+                    </h2>
+                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
+                        {{ voters|length }} Registered
+                    </span>
+                </div>
+                
+                {% if voters %}
+                    <div class="space-y-4 max-h-96 overflow-y-auto">
+                        {% for voter in voters %}
+                            <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mr-4">
+                                            <i class="fas fa-user text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-semibold text-gray-900">{{ voter.name }}</h3>
+                                            <p class="text-sm text-gray-600">ID: {{ voter.voter_id }} • {{ voter.gender }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        {% if voter.has_voted %}
+                                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold">
+                                                <i class="fas fa-check mr-1"></i>Voted
+                                            </span>
+                                        {% else %}
+                                            <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-semibold">
+                                                <i class="fas fa-clock mr-1"></i>Pending
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <i class="fas fa-users text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-600">No voters registered yet</p>
+                        <a href="{{ url_for('main.admin_register') }}" 
+                           class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors inline-block">
+                            Register First Voter
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Add Candidate Modal -->
+<div id="addCandidateModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md animate-fade-in">
+            <div class="text-center mb-6">
+                <i class="fas fa-user-tie text-4xl text-green-600 mb-4"></i>
+                <h2 class="text-2xl font-bold text-gray-900">Add New Candidate</h2>
+            </div>
+            
+            <form method="POST" action="{{ url_for('main.add_candidate') }}" enctype="multipart/form-data">
+                <div class="space-y-4 overflow-y-auto max-h-80 pr-2">
+                    <div>
+                        <label for="candidate_name" class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                        <input type="text" 
+                               id="candidate_name" 
+                               name="name" 
+                               required
+                               placeholder="Enter candidate name"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                    
+                    <div>
+                        <label for="candidate_symbol" class="block text-sm font-medium text-gray-700 mb-2">Party Symbol</label>
+                        <input type="text" 
+                               id="candidate_symbol" 
+                               name="symbol" 
+                               required
+                               placeholder="e.g., Lotus, Hand, Arrow"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+
+                    <div>
+                        <label for="candidate_image" class="block text-sm font-medium text-gray-700 mb-2">Party Symbol Image</label>
+                        <input type="file" 
+                               id="candidate_image" 
+                               name="photo" 
+                               accept="image/*"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">Upload an image for the party symbol (optional)</p>
+                    </div>
+                    
+                    <div>
+                        <label for="candidate_state" class="block text-sm font-medium text-gray-700 mb-2">State</label>
+                        <input type="text" 
+                               id="candidate_state" 
+                               name="state" 
+                               required
+                               placeholder="Enter state name"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                    
+                    <div>
+                        <label for="candidate_district" class="block text-sm font-medium text-gray-700 mb-2">District</label>
+                        <input type="text" 
+                               id="candidate_district" 
+                               name="district" 
+                               required
+                               placeholder="Enter district name"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                    
+                    <div>
+                        <label for="candidate_taluk" class="block text-sm font-medium text-gray-700 mb-2">Taluk</label>
+                        <input type="text" 
+                               id="candidate_taluk" 
+                               name="taluk" 
+                               required
+                               placeholder="Enter taluk name"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                </div>
+                
+                <div class="flex space-x-4 mt-8">
+                    <button type="button" 
+                            onclick="hideAddCandidateModal()"
+                            class="flex-1 bg-gray-500 text-white py-3 rounded-lg hover:bg-gray-600 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Add Candidate
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Election Modal -->
+<div id="addElectionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md animate-fade-in">
+            <div class="text-center mb-6">
+                <i class="fas fa-calendar-plus text-4xl text-yellow-600 mb-4"></i>
+                <h2 class="text-2xl font-bold text-gray-900">Create New Election</h2>
+            </div>
+            
+            <form method="POST" action="{{ url_for('main.create_election') }}">
+                <div class="space-y-4 overflow-y-auto max-h-80 pr-2">
+                    <div>
+                        <label for="election_title" class="block text-sm font-medium text-gray-700 mb-2">Election Title</label>
+                        <input type="text" 
+                               id="election_title" 
+                               name="title" 
+                               required
+                               placeholder="e.g., General Election 2025"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label for="election_description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea id="election_description" 
+                                  name="description" 
+                                  rows="3"
+                                  placeholder="Brief description of the election"
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"></textarea>
+                    </div>
+                    <div>
+                        <label for="election_start_time" class="block text-sm font-medium text-gray-700 mb-2">Start Time (IST)</label>
+                        <input type="datetime-local" 
+                               id="election_start_time" 
+                               name="start_time" 
+                               required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label for="election_end_time" class="block text-sm font-medium text-gray-700 mb-2">End Time (IST)</label>
+                        <input type="datetime-local" 
+                               id="election_end_time" 
+                               name="end_time" 
+                               required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                    </div>
+                </div>
+                
+                <div class="flex space-x-4 mt-8">
+                    <button type="button" 
+                            onclick="hideAddElectionModal()"
+                            class="flex-1 bg-gray-500 text-white py-3 rounded-lg hover:bg-gray-600 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="flex-1 bg-yellow-600 text-white py-3 rounded-lg hover:bg-yellow-700 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Create Election
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showAddCandidateModal() {
+        document.getElementById('addCandidateModal').classList.remove('hidden');
+    }
+    
+    function hideAddCandidateModal() {
+        document.getElementById('addCandidateModal').classList.add('hidden');
+    }
+    
+    // Close modal when clicking outside
+    document.getElementById('addCandidateModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            hideAddCandidateModal();
+        }
+    });
+
+    function showAddElectionModal() {
+        document.getElementById('addElectionModal').classList.remove('hidden');
+    }
+    
+    function hideAddElectionModal() {
+        document.getElementById('addElectionModal').classList.add('hidden');
+    }
+
+    document.getElementById('addElectionModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            hideAddElectionModal();
+        }
+    });
+</script>
+{% endblock %}
